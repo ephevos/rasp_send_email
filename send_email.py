@@ -10,6 +10,8 @@ import mimetypes
 from email.mime.image import MIMEImage
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
+from stat import S_ISREG, ST_CTIME, ST_MODE
+import os, sys, time
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.send'
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -51,6 +53,20 @@ def SendMessageInternal(service, user_id, message):
         print('An error occurred: %s' % error)
         return "Error"
     return "OK"
+
+def getDirInfo(dirpath):
+    # get all entries in the directory w/ stats
+    entries = (os.path.join(dirpath, fn) for fn in os.listdir(dirpath))
+    entries = ((os.stat(path).st_mtime, path) for path in entries)
+
+    return entries
+
+def renderDirInfo(entries):
+    html = ""
+    for entry in entries:
+        html += str(entry[1])+" "+str(entry[0])+"<br/>"
+
+    return html
 
 def CreateMessageHtml(sender, to, subject, msgHtml, msgPlain):
     msg = MIMEMultipart('alternative')
@@ -127,6 +143,10 @@ def main():
     subject = "subject"
     msgHtml = "Hi<br/>Html Email"
     msgPlain = "Hi\nPlain Email"
+
+    msgHtml = renderDirInfo(getDirInfo('.'))
+
+
     SendMessage(sender, to, subject, msgHtml, msgPlain)
     # Send message with attachment:
     # SendMessage(sender, to, subject, msgHtml, msgPlain, '/path/to/file.pdf')
