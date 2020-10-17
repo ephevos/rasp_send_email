@@ -180,11 +180,12 @@ def createMessageWithAttachment(
 def main():
     to = "ephevos@gmail.com"
     sender = "ephevos@gmail.com"
-    subject = "subject"
+    subject = "PicTimes"
     msgHtml = "Hi<br/>Html Email"
     msgPlain = "Hi\nPlain Email"
 
-    msgHtml = renderDirInfo(getDirInfo('.'))
+    # msgHtml = renderDirInfo(getDirInfo('.'))
+    msgHtml = renderDirInfo(getDirInfo('/home/pi/usb/out_pics'))
 
     SendMessage(sender, to, subject, msgHtml, msgPlain)
     # Send message with attachment:
