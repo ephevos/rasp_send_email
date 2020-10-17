@@ -72,10 +72,15 @@ def renderDirInfo(entries):
 
     hash_dir = {}
     min_val = 1e10
+    max_val = 0
     for entry in entries:
         if min_val > entry[0]:
             min_val = entry[0]
+        if max_val < entry[0]:
+            max_val = entry[0]
         hash_dir[entry[1]] = entry[0]
+
+    limit_recent = max_val - 24 * 3600
 
     elements = []
     prev_v = min_val
@@ -87,18 +92,43 @@ def renderDirInfo(entries):
         prev_v = v
         elements.append(element)
 
-    html += "<table><tr><th>File</th><th>time</th><th>duration</th></tr>"
-    # style = "background-color:navy" > 94 < / td >
-    for element in elements:
+    prev_v = elements[-1]['date']
+    for i in reversed(range(len(elements)-1)):
+        val1 = elements[i]['order']
+        v = elements[i]['date']
+        val2 = prev_v - v
+        if val2 < val1:
+            elements[i]['order'] = val2
+        prev_v = v
+
+    html += "<h2>Most recent</h2><table><tr><th>File</th><th>time</th><th>duration</th></tr>"
+    for element in reversed(elements):
+        if element['date'] > limit_recent:
+            color = 'white'
+            if element['order'] < 20:
+                color = '#A52A2A'
+            elif element['order'] < 200:
+                color = '#CC8A8A'
+
+            html += "<tr>"
+            html += "<td>" + element['file'] + "</td>"
+            date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %H:%M:%S")
+            html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
+            html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
+            html += "</tr>"
+    html += "</table></body></html>"
+
+    html += "<h2>All values</h2><table><tr><th>File</th><th>time</th><th>duration</th></tr>"
+    for element in reversed(elements):
         color = 'white'
         if element['order'] < 20:
             color = '#A52A2A'
-        elif element['order'] < 100:
-            color = '#FAEAEA'
+        elif element['order'] < 200:
+            color = '#CC8A8A'
 
         html += "<tr>"
         html += "<td>" + element['file'] + "</td>"
-        date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %Y %I:%M:%S")
+        date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %H:%M:%S")
         html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
         html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
         html += "</tr>"
