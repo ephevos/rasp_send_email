@@ -93,7 +93,7 @@ def renderDirInfo(entries):
         elements.append(element)
 
     prev_v = elements[-1]['date']
-    for i in reversed(range(len(elements)-1)):
+    for i in reversed(range(len(elements) - 1)):
         val1 = elements[i]['order']
         v = elements[i]['date']
         val2 = prev_v - v
@@ -113,8 +113,8 @@ def renderDirInfo(entries):
             html += "<tr>"
             html += "<td>" + element['file'] + "</td>"
             date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %H:%M:%S")
-            html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
-            html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
+            html += "<td style = \"background-color:%s\">%s</td>" % (color, date_str)
+            html += "<td style = \"background-color:%s\">%.2f</td>" % (color, element['order'])
             html += "</tr>"
     html += "</table><br><br>"
 
@@ -130,8 +130,8 @@ def renderDirInfo(entries):
             html += "<tr>"
             html += "<td>" + element['file'] + "</td>"
             date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %H:%M:%S")
-            html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
-            html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
+            html += "<td style = \"background-color:%s\">%s</td>" % (color, date_str)
+            html += "<td style = \"background-color:%s\">%.2f</td>" % (color, element['order'])
             html += "</tr>"
     html += "</table></body></html>"
 
