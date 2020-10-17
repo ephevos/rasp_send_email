@@ -12,10 +12,12 @@ from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from stat import S_ISREG, ST_CTIME, ST_MODE
 import os, sys, time
+from datetime import datetime
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.send'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Gmail API Python Send Email'
+
 
 def get_credentials():
     home_dir = os.path.expanduser('~')
@@ -33,6 +35,7 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
+
 def SendMessage(sender, to, subject, msgHtml, msgPlain, attachmentFile=None):
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
@@ -44,6 +47,7 @@ def SendMessage(sender, to, subject, msgHtml, msgPlain, attachmentFile=None):
     result = SendMessageInternal(service, "me", message1)
     return result
 
+
 def SendMessageInternal(service, user_id, message):
     try:
         message = (service.users().messages().send(userId=user_id, body=message).execute())
@@ -54,6 +58,7 @@ def SendMessageInternal(service, user_id, message):
         return "Error"
     return "OK"
 
+
 def getDirInfo(dirpath):
     # get all entries in the directory w/ stats
     entries = (os.path.join(dirpath, fn) for fn in os.listdir(dirpath))
@@ -61,12 +66,46 @@ def getDirInfo(dirpath):
 
     return entries
 
+
 def renderDirInfo(entries):
-    html = ""
+    html = "<!DOCTYPE html><html><head><style>table, th, td {  border: 1px solid black;  border-collapse: collapse;}</style></head><body>"
+
+    hash_dir = {}
+    min_val = 1e10
     for entry in entries:
-        html += str(entry[1])+" "+str(entry[0])+"<br/>"
+        if min_val > entry[0]:
+            min_val = entry[0]
+        hash_dir[entry[1]] = entry[0]
+
+    elements = []
+    prev_v = min_val
+    for k, v in sorted(hash_dir.items(), key=lambda item: item[1]):
+        element = {}
+        element['file'] = k
+        element['date'] = v
+        element['order'] = v - prev_v
+        prev_v = v
+        elements.append(element)
+
+    html += "<table><tr><th>File</th><th>time</th><th>duration</th></tr>"
+    # style = "background-color:navy" > 94 < / td >
+    for element in elements:
+        color = 'white'
+        if element['order'] < 20:
+            color = '#A52A2A'
+        elif element['order'] < 100:
+            color = '#FAEAEA'
+
+        html += "<tr>"
+        html += "<td>" + element['file'] + "</td>"
+        date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %Y %I:%M:%S")
+        html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
+        html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
+        html += "</tr>"
+    html += "</table></body></html>"
 
     return html
+
 
 def CreateMessageHtml(sender, to, subject, msgHtml, msgPlain):
     msg = MIMEMultipart('alternative')
@@ -78,8 +117,9 @@ def CreateMessageHtml(sender, to, subject, msgHtml, msgPlain):
     return {'raw': base64.urlsafe_b64encode(msg.as_string().encode()).decode()}
     # return {'raw': base64.urlsafe_b64encode(msg.as_string())}
 
+
 def createMessageWithAttachment(
-    sender, to, subject, msgHtml, msgPlain, attachmentFile):
+        sender, to, subject, msgHtml, msgPlain, attachmentFile):
     """Create a message for an email.
 
     Args:
@@ -146,10 +186,10 @@ def main():
 
     msgHtml = renderDirInfo(getDirInfo('.'))
 
-
     SendMessage(sender, to, subject, msgHtml, msgPlain)
     # Send message with attachment:
     # SendMessage(sender, to, subject, msgHtml, msgPlain, '/path/to/file.pdf')
+
 
 if __name__ == '__main__':
     main()
