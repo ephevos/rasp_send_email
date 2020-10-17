@@ -103,7 +103,7 @@ def renderDirInfo(entries):
 
     html += "<h2>Most recent</h2><table><tr><th>File</th><th>time</th><th>duration</th></tr>"
     for element in reversed(elements):
-        if element['date'] > limit_recent:
+        if element['date'] >= limit_recent:
             color = 'white'
             if element['order'] < 20:
                 color = '#A52A2A'
@@ -116,22 +116,23 @@ def renderDirInfo(entries):
             html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
             html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
             html += "</tr>"
-    html += "</table></body></html>"
+    html += "</table><br><br>"
 
-    html += "<h2>All values</h2><table><tr><th>File</th><th>time</th><th>duration</th></tr>"
+    html += "<h2>Remaining values</h2><table><tr><th>File</th><th>time</th><th>duration</th></tr>"
     for element in reversed(elements):
-        color = 'white'
-        if element['order'] < 20:
-            color = '#A52A2A'
-        elif element['order'] < 200:
-            color = '#CC8A8A'
+        if element['date'] < limit_recent:
+            color = 'white'
+            if element['order'] < 20:
+                color = '#A52A2A'
+            elif element['order'] < 200:
+                color = '#CC8A8A'
 
-        html += "<tr>"
-        html += "<td>" + element['file'] + "</td>"
-        date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %H:%M:%S")
-        html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
-        html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
-        html += "</tr>"
+            html += "<tr>"
+            html += "<td>" + element['file'] + "</td>"
+            date_str = datetime.fromtimestamp(element['date']).strftime("%A, %B %d, %H:%M:%S")
+            html += "<td style = \"background-color:" + color + "\">" + date_str + "</td>"
+            html += "<td style = \"background-color:" + color + "\">" + str(element['order']) + "</td>"
+            html += "</tr>"
     html += "</table></body></html>"
 
     return html
