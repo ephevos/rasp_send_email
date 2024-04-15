@@ -14,7 +14,6 @@ from stat import S_ISREG, ST_CTIME, ST_MODE
 import os, sys, time
 from datetime import datetime
 import base64
-import cv2
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.send'
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -127,10 +126,7 @@ def renderDirInfo(entries):
             if element['order'] < 20:
                 color = '#A52A2A'
                 if 'jpg' in element['file']:
-                    image = cv2.imread(element['file'])
-                    image = cv2.resize(image, (150, 150))
-                    image_name = element['file'][:-4] + '_resized.jpg'
-                    cv2.imwrite(image_name, image)
+                    image_name = element['file']
                     cid = '<%d>' % (num)
                     image_hash[cid] = image_name
                     # retval, buffer = cv2.imencode('.jpg', image)
@@ -309,26 +305,65 @@ def createMessageWithSingleAttachment(
     return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
 
 
+import requests
+
+def get_public_ip():
+    try:
+        response = requests.get("https://checkip.amazonaws.com")
+        if response.status_code == 200:
+            return response.text.strip()
+        else:
+            print(f"Failed to get public IP. HTTP Status Code: {response.status_code}")
+            return None
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+
+def read_current_ip(filename='currentIP.txt'):
+    try:
+        with open(filename, 'r') as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        print(f"{filename} not found.")
+        return None
+
+def write_current_ip(ip, filename='currentIP.txt'):
+    try:
+        with open(filename, 'w') as file:
+            file.write(ip)
+    except Exception as e:
+        print(f"An error occurred while writing to {filename}: {e}")
+
 def main():
+
+  send_email = False
+  public_ip = get_public_ip()  
+  if public_ip:
+    print(f"Public IP Address: {public_ip}")
+
+    current_ip = read_current_ip()
+    if current_ip:
+        print(f"Current IP Address from {current_ip}")
+
+        if public_ip == current_ip:
+            print("Public IP is the same as the current IP.")
+        else:
+            print("Public IP is different from the current IP.")
+            write_current_ip(public_ip)
+            send_email = True
+    else:
+        print("No current IP found. Writing the new public IP to currentIP.txt.")
+        write_current_ip(public_ip)
+
+  if send_email:
     to = "ephevos@gmail.com"
     sender = "ephevos@gmail.com"
-    subject = "PicTimes"
-    msgHtml = "Hi<br/>Html Email"
-    msgPlain = "Hi\nPlain Email"
-
-    # msgHtml, image_hash = renderDirInfo(getDirInfo('.'))
-    msgHtml, image_hash = renderDirInfo(getDirInfo('/home/pi/usb/out_pics'))
-    # with open('test.html', 'w') as writer:
-    #     writer.write(msgHtml)
-
-    # SendMessage(sender, to, subject, msgHtml, msgPlain)
+    subject = "Pi4 public ip"
+    msgHtml = f"Public IP has updated in Granollers:<br/><br/><b>{public_ip}</b>"
+    msgPlain = f"Hi\n {public_ip}"
+    SendMessage(sender, to, subject, msgHtml, msgPlain)
     # Send message with attachment:
-    SendMessage(sender, to, subject, msgHtml, msgPlain, image_hash)
-
-
-    for element in image_hash:
-        attachmentFile = image_hash[element]
-        os.remove(attachmentFile)
+    #SendMessage(sender, to, subject, msgHtml, msgPlain, 'capture0001.jpg')
 
 if __name__ == '__main__':
     main()
